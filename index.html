@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>HNR Videos</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; background: #111; color: #fff; margin: 0; padding: 0; }
+    .video img { border-radius: 10px; margin-top: 20px; width: 300px; cursor: pointer; transition: 0.3s; }
+    .video img:hover { transform: scale(1.05); }
+    a, button { text-decoration: none; color: #0af; }
+    textarea { width: 90%; height: 100px; background: #222; color: #0f0; border: 1px solid #333; margin-bottom: 10px; padding: 10px; }
+    button { padding: 10px 20px; background: #0af; color: #fff; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #08f; }
+    .hide { display: none; }
+    .error-msg { font-size: 60px; color: #f00; margin-top: 100px; }
+  </style>
+</head>
+<body onload="renderPage()">
+
+<div id="homePage" class="page">
+  <h1>Videos from @hnr-45iuu</h1>
+  <div class="video">
+    <a href="#script" onclick="renderPage()">
+      <img src="thumbnail.jpg" alt="First Video">
+      <p>Video Name: OP GUI HUB</p>
+    </a>
+  </div>
+</div>
+
+<div id="scriptPage" class="page hide">
+  <h1>Script</h1>
+  <textarea id="scriptBox" readonly>
+loadstring(game:HttpGet("https://raw.githubusercontent.com/DSHBenjamin/Oois/refs/heads/main/Gui-opi-hub"))()
+  </textarea><br>
+  <button onclick="copyScript()">Copy Script</button>
+</div>
+
+<div id="errorPage" class="page hide">
+  <div class="error-msg">ERROR</div>
+  <p>Please open link in @hnr-45iuu on YouTube</p>
+</div>
+
+<script>
+function copyScript() {
+  var copyText = document.getElementById("scriptBox");
+  copyText.select();
+  copyText.setSelectionRange(0, 99999);
+  document.execCommand("copy");
+}
+
+function renderPage() {
+  var page = window.location.hash || "#home";
+  var home = document.getElementById("homePage");
+  var script = document.getElementById("scriptPage");
+  var error = document.getElementById("errorPage");
+
+  home.classList.add("hide");
+  script.classList.add("hide");
+  error.classList.add("hide");
+
+  if (page === "#home") {
+    home.classList.remove("hide");
+  } else if (page === "#script") {
+    // เช็ค referrer
+    var ref = document.referrer;
+    if (
+      ref.includes("https://www.youtube.com/@hnr-45iuu") ||
+      ref.includes("https://youtu.be/aA5J6PWMo1U?si=tSoTpKHVPHNpwWOA")
+    ) {
+      script.classList.remove("hide");
+    } else {
+      window.location.hash = "#error";
+      renderPage();
+    }
+  } else if (page === "#error") {
+    error.classList.remove("hide");
+  }
+}
+</script>
+
+</body>
+</html>
