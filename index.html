@@ -1,81 +1,156 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>HNR Videos</title>
-  <style>
-    body { font-family: sans-serif; text-align: center; background: #111; color: #fff; margin: 0; padding: 0; }
-    .video img { border-radius: 10px; margin-top: 20px; width: 300px; cursor: pointer; transition: 0.3s; }
-    .video img:hover { transform: scale(1.05); }
-    a, button { text-decoration: none; color: #0af; }
-    textarea { width: 90%; height: 100px; background: #222; color: #0f0; border: 1px solid #333; margin-bottom: 10px; padding: 10px; }
-    button { padding: 10px 20px; background: #0af; color: #fff; border: none; border-radius: 5px; cursor: pointer; }
-    button:hover { background: #08f; }
-    .hide { display: none; }
-    .error-msg { font-size: 60px; color: #f00; margin-top: 100px; }
-  </style>
+<meta charset="UTF-8" />
+<title>mypastebin</title>
+<style>
+  body {
+    background: #fff;
+    color: #333;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0; padding: 20px;
+  }
+  h1 {
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+  label {
+    font-weight: 600;
+    margin-top: 15px;
+    display: block;
+    margin-bottom: 6px;
+  }
+  textarea {
+    width: 100%;
+    font-family: monospace;
+    font-size: 14px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: vertical;
+    box-sizing: border-box;
+    background: #fafafa;
+    color: #111;
+  }
+  textarea#code { height: 200px; }
+  textarea#hidden { height: 100px; }
+
+  button {
+    margin-top: 15px;
+    padding: 10px 25px;
+    font-size: 15px;
+    background: #007bff;
+    border: none;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  button:hover {
+    background: #0056b3;
+  }
+  #linkView {
+    margin-top: 25px;
+    padding: 15px;
+    background: #f0f0f0;
+    border-radius: 4px;
+  }
+  #linkView a {
+    color: #007bff;
+    text-decoration: none;
+    word-break: break-all;
+  }
+  #rawView {
+    margin-top: 30px;
+    background: #f7f7f7;
+    border: 1px solid #ddd;
+    padding: 20px;
+    border-radius: 4px;
+    white-space: pre-wrap;
+    font-family: monospace;
+    font-size: 14px;
+    color: #222;
+  }
+</style>
 </head>
-<body onload="renderPage()">
+<body>
 
-<div id="homePage" class="page">
-  <h1>Videos from @hnr-45iuu</h1>
-  <div class="video">
-    <a href="#script" onclick="renderPage()">
-      <img src="thumbnail.jpg" alt="First Video">
-      <p>Video Name: OP GUI HUB</p>
-    </a>
-  </div>
+<h1 id="header">mypastebin</h1>
+
+<label for="code" id="labelCode">Main Code (will be displayed):</label>
+<textarea id="code" placeholder="Paste your code here..."></textarea>
+
+<label for="hidden" id="labelHidden">Hidden Code (runs in background):</label>
+<textarea id="hidden" placeholder="Enter hidden code, e.g. loadstring(...) ..."></textarea>
+
+<button id="createBtn" onclick="createPaste()">Create Paste</button>
+
+<div id="linkView" style="display:none;">
+  <strong>Your Link:</strong><br />
+  <a href="#" id="generatedLink" target="_blank" rel="noopener"></a>
 </div>
 
-<div id="scriptPage" class="page hide">
-  <h1>Script</h1>
-  <textarea id="scriptBox" readonly>
-loadstring(game:HttpGet("https://raw.githubusercontent.com/DSHBenjamin/Oois/refs/heads/main/Gui-opi-hub"))()
-  </textarea><br>
-  <button onclick="copyScript()">Copy Script</button>
-</div>
-
-<div id="errorPage" class="page hide">
-  <div class="error-msg">ERROR</div>
-  <p>Please open link in @hnr-45iuu on YouTube</p>
-</div>
+<pre id="rawView" style="display:none;"></pre>
 
 <script>
-function copyScript() {
-  var copyText = document.getElementById("scriptBox");
-  copyText.select();
-  copyText.setSelectionRange(0, 99999);
-  document.execCommand("copy");
+function createPaste() {
+  const code = document.getElementById("code").value.trim();
+  const hidden = document.getElementById("hidden").value.trim();
+
+  if (!code) {
+    alert("Please enter main code first!");
+    return;
+  }
+
+  const id = Math.random().toString(36).substring(2, 10);
+  localStorage.setItem("paste_" + id, JSON.stringify({ code, hidden }));
+
+  const url = window.location.origin + window.location.pathname + "?id=" + id;
+
+  document.getElementById("generatedLink").href = url;
+  document.getElementById("generatedLink").textContent = url;
+  document.getElementById("linkView").style.display = "block";
+  document.getElementById("rawView").style.display = "none";
 }
 
-function renderPage() {
-  var page = window.location.hash || "#home";
-  var home = document.getElementById("homePage");
-  var script = document.getElementById("scriptPage");
-  var error = document.getElementById("errorPage");
+function showRaw() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
+  if (!id) return;
 
-  home.classList.add("hide");
-  script.classList.add("hide");
-  error.classList.add("hide");
+  const dataRaw = localStorage.getItem("paste_" + id);
+  if (!dataRaw) {
+    document.getElementById("rawView").textContent = "Paste not found";
+    document.getElementById("rawView").style.display = "block";
+    return;
+  }
 
-  if (page === "#home") {
-    home.classList.remove("hide");
-  } else if (page === "#script") {
-    // เช็ค referrer
-    var ref = document.referrer;
-    if (
-      ref.includes("https://www.youtube.com/@hnr-45iuu") ||
-      ref.includes("https://youtu.be/aA5J6PWMo1U?si=tSoTpKHVPHNpwWOA")
-    ) {
-      script.classList.remove("hide");
-    } else {
-      window.location.hash = "#error";
-      renderPage();
+  const { code, hidden } = JSON.parse(dataRaw);
+
+  // Hide inputs and header
+  document.getElementById("header").style.display = "none";
+  document.getElementById("code").style.display = "none";
+  document.getElementById("hidden").style.display = "none";
+  document.getElementById("labelCode").style.display = "none";
+  document.getElementById("labelHidden").style.display = "none";
+  document.getElementById("createBtn").style.display = "none";
+  document.getElementById("linkView").style.display = "none";
+
+  // Show main code
+  document.getElementById("rawView").textContent = code;
+  document.getElementById("rawView").style.display = "block";
+
+  // Run hidden code if any
+  if (hidden) {
+    try {
+      new Function(hidden)();
+    } catch(e) {
+      console.error("Error running hidden code:", e);
     }
-  } else if (page === "#error") {
-    error.classList.remove("hide");
   }
 }
+
+window.onload = showRaw;
 </script>
 
 </body>
